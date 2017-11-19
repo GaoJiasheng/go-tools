@@ -1,2 +1,2 @@
 # go-tools
-golang对标准库的一些封装
+对golang标准库的一些封装,平时用

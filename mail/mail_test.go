@@ -1,11 +1,11 @@
-package anomail
+package mail
 
 import (
 	"fmt"
 	"testing"
 )
 
-func TestMain(t *testing.T) {
+func TestMain(m *testing.M) {
 	//__send_mail_test()
 	//_private_test()
 	//__add_address_test()

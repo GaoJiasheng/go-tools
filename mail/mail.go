@@ -1,4 +1,4 @@
-package anomail
+package mail
 
 import (
 	_ "fmt"

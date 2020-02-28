@@ -1,2 +1,4 @@
 # go-tools
-golang封装的一些小功能
+Some Golang tools
+- mail tool
+- prometheus tools

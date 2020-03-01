@@ -13,7 +13,7 @@ func TestAPIQuery(t *testing.T) {
 	} else {
 		t.Logf("Test Successful:%d time series", len(ret.Data.Result))
 		for i, _ := range ret.Data.Result {
-			t.Log(ret.Data.Result[i])
+			t.Log(ret.Data.Result[i].TranstoStdTimeSeries())
 		}
 	}
 }
@@ -30,7 +30,7 @@ func TestAPIQueryRange(t *testing.T) {
 	} else {
 		t.Logf("Test Successful:%d time series", len(ret.Data.Result))
 		for i, _ := range ret.Data.Result {
-			t.Log(ret.Data.Result[i])
+			t.Log(ret.Data.Result[i].TranstoStdTimeSeries())
 		}
 	}
 }

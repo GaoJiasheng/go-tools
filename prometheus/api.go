@@ -3,8 +3,12 @@ package prometheus
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
+	"strings"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/snappy"
 	"github.com/prometheus/prometheus/prompb"
 
 	"github.com/gaojiasheng/go-tools/utils"
@@ -88,4 +92,20 @@ func QueryRange(address, expression string, start, end, step int64) (*ReadRespon
 		return nil, fmt.Errorf("%v", errs)
 	}
 	return data, nil
+}
+
+func RemoteWrite(address string, body *prompb.WriteRequest) error {
+	target := utils.MakeURL(address, "/api/v1/receive", map[string]string{})
+	paramStr, _ := proto.Marshal(body)
+	compressed := snappy.Encode(nil, paramStr)
+
+	bd, errs := http.Post(target, "application/x-www-form-urlencoded", strings.NewReader(string(compressed)))
+	if errs != nil {
+		return fmt.Errorf("%+v", errs)
+	}
+
+	if bd.StatusCode != 200 {
+		return fmt.Errorf("code is not 200. [code:%d]", bd.StatusCode)
+	}
+	return nil
 }

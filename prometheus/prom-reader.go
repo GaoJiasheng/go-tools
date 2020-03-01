@@ -15,18 +15,18 @@ import (
  * Can support raw data
  */
 
-type Reader struct {
+type PromReader struct {
 	Address       []string
 	StartTs       int64
 	EndTs         int64
 	DataStep      int64
 	MigrationStep int64
 	Expression    string
-	outer         chan *[]*prompb.TimeSeries
+	outer         chan *[]prompb.TimeSeries
 }
 
-func NewReader(address []string, start, end int64, dStep, mStep int64, expression string, outer chan *[]*prompb.TimeSeries) *Reader {
-	return &Reader{
+func NewPromReader(address []string, start, end int64, dStep, mStep int64, expression string, outer chan *[]prompb.TimeSeries) *PromReader {
+	return &PromReader{
 		Address:       address,
 		StartTs:       start,
 		EndTs:         end,
@@ -37,7 +37,7 @@ func NewReader(address []string, start, end int64, dStep, mStep int64, expressio
 	}
 }
 
-func (r Reader) Read(logger log.Logger) {
+func (r PromReader) Read(logger log.Logger) {
 	// long term time duration
 	// split to a ts series in order to be start & end of time range
 	tss := utils.TimeRangeSplit(r.StartTs, r.EndTs, r.MigrationStep)
@@ -49,7 +49,7 @@ func (r Reader) Read(logger log.Logger) {
 		start := tss[i]
 		end := tss[i+1]
 
-		allSeries := make([]*prompb.TimeSeries, 0)
+		allSeries := make([]prompb.TimeSeries, 0)
 		mergeLock := sync.Mutex{}
 		wg := sync.WaitGroup{}
 		for i, _ := range r.Address {
@@ -63,7 +63,8 @@ func (r Reader) Read(logger log.Logger) {
 				}
 				mergeLock.Lock()
 				for i, _ := range data.Data.Result {
-					allSeries = append(allSeries, data.Data.Result[i].TranstoStdTimeSeries())
+					t := data.Data.Result[i].TranstoStdTimeSeries()
+					allSeries = append(allSeries, *t)
 				}
 				mergeLock.Unlock()
 			}(r.Address[i], start, end, r.DataStep)

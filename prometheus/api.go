@@ -3,6 +3,7 @@ package prometheus
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -105,7 +106,11 @@ func RemoteWrite(address string, body *prompb.WriteRequest) error {
 	}
 
 	if bd.StatusCode != 200 {
-		return fmt.Errorf("code is not 200. [code:%d]", bd.StatusCode)
+		body, err := ioutil.ReadAll(bd.Body)
+		if err != nil {
+			body = []byte(fmt.Sprintf("[read body failed:%s]", err.Error()))
+		}
+		return fmt.Errorf("code is not 200. [code:%d][body:%s]", bd.StatusCode, string(body))
 	}
 	return nil
 }

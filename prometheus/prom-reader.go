@@ -22,10 +22,17 @@ type PromReader struct {
 	DataStep      int64
 	MigrationStep int64
 	Expression    string
-	outer         chan *[]prompb.TimeSeries
+	outer         chan PromReaderOutput
+}
+type PromReaderOutput struct {
+	Start         int64
+	End           int64
+	MigrationStep int64
+	DataStep      int64
+	TimeSeries    *[]prompb.TimeSeries
 }
 
-func NewPromReader(address []string, start, end int64, dStep, mStep int64, expression string, outer chan *[]prompb.TimeSeries) *PromReader {
+func NewPromReader(address []string, start, end int64, dStep, mStep int64, expression string, outer chan PromReaderOutput) *PromReader {
 	return &PromReader{
 		Address:       address,
 		StartTs:       start,
@@ -71,7 +78,14 @@ func (r PromReader) Read(logger log.Logger) {
 		}
 		wg.Wait()
 
-		r.outer <- &allSeries
+		//level.Info(logger).Log("module", "prom_read", "msg", fmt.Sprintf("[%s] data fetch successful. step:%d", time.Unix(start, 0).Format("2006-01-02 15:04:05"), end-start))
+		r.outer <- PromReaderOutput{
+			Start:         start,
+			End:           end,
+			MigrationStep: r.MigrationStep,
+			DataStep:      r.DataStep,
+			TimeSeries:    &allSeries,
+		}
 	}
 	close(r.outer)
 }

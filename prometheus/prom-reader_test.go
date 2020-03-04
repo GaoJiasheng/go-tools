@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/prometheus/prometheus/prompb"
 )
 
 func TestReader(t *testing.T) {
-	resultCh := make(chan *[]prompb.TimeSeries, 10)
+	resultCh := make(chan PromReaderOutput, 10)
 	reader := NewPromReader(
 		[]string{"http://localhost:9090"},
 		time.Now().Unix()-3600*24*7,
@@ -22,6 +20,6 @@ func TestReader(t *testing.T) {
 
 	go reader.Read(nil)
 	for timeSeries := range resultCh {
-		fmt.Println(len(*timeSeries))
+		fmt.Println(len(*timeSeries.TimeSeries))
 	}
 }

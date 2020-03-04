@@ -1,7 +1,10 @@
 package prometheus
 
 import (
+	"time"
+
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/prometheus/prompb"
 )
 
@@ -36,7 +39,7 @@ func NewPromToThanosTransporter(
 }
 
 func (t PromToThanosTransporter) Start(logger log.Logger) {
-	dataQueue := make(chan *[]prompb.TimeSeries, 100)
+	dataQueue := make(chan PromReaderOutput, 100)
 	reader := NewPromReader(
 		t.PromAddrs,
 		t.StartTs,
@@ -46,12 +49,24 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 		t.Expression,
 		dataQueue,
 	)
-	go reader.Read(nil)
+	go reader.Read(logger)
 
-	for timeSeries := range dataQueue {
+	for body := range dataQueue {
 		remoteWriteBody := &prompb.WriteRequest{
-			Timeseries: *timeSeries,
+			Timeseries: *body.TimeSeries,
 		}
-		RemoteWrite(t.ThanosAddr, remoteWriteBody)
+		err := RemoteWrite(t.ThanosAddr, remoteWriteBody)
+
+		if err != nil {
+			level.Error(logger).Log("module", "remote_write", "msg", err.Error())
+		} else {
+			level.Info(logger).Log("module", "remote_write",
+				"msg", "successful",
+				"start", time.Unix(body.Start, 0).Format("2006-01-02 15:04:05"),
+				"migrate_step", body.MigrationStep,
+				"data_step", body.DataStep,
+				"time_series_num", len(*body.TimeSeries),
+			)
+		}
 	}
 }

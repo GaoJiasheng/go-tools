@@ -79,6 +79,7 @@ func (r PromReader) Read(logger log.Logger) {
 		wg.Wait()
 
 		//level.Info(logger).Log("module", "prom_read", "msg", fmt.Sprintf("[%s] data fetch successful. step:%d", time.Unix(start, 0).Format("2006-01-02 15:04:05"), end-start))
+
 		r.outer <- PromReaderOutput{
 			Start:         start,
 			End:           end,

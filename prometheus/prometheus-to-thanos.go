@@ -52,21 +52,28 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 	go reader.Read(logger)
 
 	for body := range dataQueue {
-		remoteWriteBody := &prompb.WriteRequest{
-			Timeseries: *body.TimeSeries,
-		}
-		err := RemoteWrite(t.ThanosAddr, remoteWriteBody)
+		splitSize := 1000000
+		for i := 0; i < len(*body.TimeSeries); i = i + splitSize {
+			end := i + splitSize
+			if end > len(*body.TimeSeries) {
+				end = len(*body.TimeSeries)
+			}
+			remoteWriteBody := &prompb.WriteRequest{
+				Timeseries: (*body.TimeSeries)[i:end],
+			}
+			err := RemoteWrite(t.ThanosAddr, remoteWriteBody)
 
-		if err != nil {
-			level.Error(logger).Log("module", "remote_write", "msg", err.Error())
-		} else {
-			level.Info(logger).Log("module", "remote_write",
-				"msg", "successful",
-				"start", time.Unix(body.Start, 0).Format("2006-01-02 15:04:05"),
-				"migrate_step", body.MigrationStep,
-				"data_step", body.DataStep,
-				"time_series_num", len(*body.TimeSeries),
-			)
+			if err != nil {
+				level.Error(logger).Log("module", "remote_write", "msg", err.Error())
+			} else {
+				level.Info(logger).Log("module", "remote_write",
+					"msg", "successful",
+					"start", time.Unix(body.Start, 0).Format("2006-01-02 15:04:05"),
+					"migrate_step", body.MigrationStep,
+					"data_step", body.DataStep,
+					"time_series_num", len(*body.TimeSeries),
+				)
+			}
 		}
 	}
 }

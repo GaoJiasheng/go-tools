@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"sync"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -53,6 +54,7 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 
 	for body := range dataQueue {
 		splitSize := 10000
+		wg := sync.WaitGroup{}
 		for i := 0; i < len(*body.TimeSeries); i = i + splitSize {
 			end := i + splitSize
 			if end > len(*body.TimeSeries) {
@@ -62,7 +64,9 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 				Timeseries: (*body.TimeSeries)[i:end],
 			}
 
-			func(end, i int) {
+			wg.Add(1)
+			go func(end, i int) {
+				defer wg.Done()
 				err := RemoteWrite(t.ThanosAddr, remoteWriteBody)
 
 				if err != nil {
@@ -77,6 +81,7 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 					)
 				}
 			}(end, i)
+			wg.Wait()
 		}
 	}
 }

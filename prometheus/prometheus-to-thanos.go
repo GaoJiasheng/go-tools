@@ -62,7 +62,7 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 				Timeseries: (*body.TimeSeries)[i:end],
 			}
 
-			go func(end, i int) {
+			func(end, i int) {
 				err := RemoteWrite(t.ThanosAddr, remoteWriteBody)
 
 				if err != nil {

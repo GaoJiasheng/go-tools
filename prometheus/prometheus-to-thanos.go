@@ -52,7 +52,7 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 	go reader.Read(logger)
 
 	for body := range dataQueue {
-		splitSize := 1000000
+		splitSize := 500000
 		for i := 0; i < len(*body.TimeSeries); i = i + splitSize {
 			end := i + splitSize
 			if end > len(*body.TimeSeries) {
@@ -62,7 +62,7 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 				Timeseries: (*body.TimeSeries)[i:end],
 			}
 
-			go func() {
+			go func(end, i int) {
 				err := RemoteWrite(t.ThanosAddr, remoteWriteBody)
 
 				if err != nil {
@@ -76,7 +76,7 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 						"time_series_num", end-i,
 					)
 				}
-			}()
+			}(end, i)
 		}
 	}
 }

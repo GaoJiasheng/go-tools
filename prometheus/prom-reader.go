@@ -23,17 +23,17 @@ type PromReader struct {
 	DataStep      int64
 	MigrationStep int64
 	Expression    string
-	outer         chan PromReaderOutput
+	outer         chan *PromReaderOutput
 }
 type PromReaderOutput struct {
 	Start         int64
 	End           int64
 	MigrationStep int64
 	DataStep      int64
-	TimeSeries    *[]prompb.TimeSeries
+	TimeSeries    *[]*prompb.TimeSeries
 }
 
-func NewPromReader(address []string, start, end int64, dStep, mStep int64, expression string, outer chan PromReaderOutput) *PromReader {
+func NewPromReader(address []string, start, end int64, dStep, mStep int64, expression string, outer chan *PromReaderOutput) *PromReader {
 	return &PromReader{
 		Address:       address,
 		StartTs:       start,
@@ -75,7 +75,7 @@ func (r PromReader) Read(logger log.Logger) {
 func (r PromReader) organizer(tranChan chan chan PromReaderOutput) {
 	for ch := range tranChan {
 		all := PromReaderOutput{}
-		tss := make([]prompb.TimeSeries, 0)
+		tss := make([]*prompb.TimeSeries, 0)
 		for body := range ch {
 			all.Start = body.Start
 			all.End = body.End
@@ -84,13 +84,13 @@ func (r PromReader) organizer(tranChan chan chan PromReaderOutput) {
 			tss = append(tss, *(body.TimeSeries)...)
 		}
 		all.TimeSeries = &tss
-		r.outer <- all
+		r.outer <- &all
 	}
 	close(r.outer)
 }
 
 func (r PromReader) readOneDurationData(logger log.Logger, resultChan chan PromReaderOutput, start, end int64) {
-	allSeries := make([]prompb.TimeSeries, 0)
+	allSeries := make([]*prompb.TimeSeries, 0)
 	wg := sync.WaitGroup{}
 	for i, _ := range r.Address {
 		wg.Add(1)
@@ -103,7 +103,7 @@ func (r PromReader) readOneDurationData(logger log.Logger, resultChan chan PromR
 			}
 			for i, _ := range data.Data.Result {
 				t := data.Data.Result[i].TranstoStdTimeSeries()
-				allSeries = append(allSeries, *t)
+				allSeries = append(allSeries, t)
 			}
 			resultChan <- PromReaderOutput{
 				Start:         start,

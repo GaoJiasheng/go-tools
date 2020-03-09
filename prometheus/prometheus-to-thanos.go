@@ -40,7 +40,7 @@ func NewPromToThanosTransporter(
 }
 
 func (t PromToThanosTransporter) Start(logger log.Logger) {
-	dataQueue := make(chan PromReaderOutput, 100)
+	dataQueue := make(chan *PromReaderOutput, 100)
 	reader := NewPromReader(
 		t.PromAddrs,
 		t.StartTs,
@@ -60,8 +60,12 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 			if end > len(*body.TimeSeries) {
 				end = len(*body.TimeSeries)
 			}
+			tmp := make([]prompb.TimeSeries, 0)
+			for i, _ := range (*body.TimeSeries)[i:end] {
+				tmp = append(tmp, *(*body.TimeSeries)[i])
+			}
 			remoteWriteBody := &prompb.WriteRequest{
-				Timeseries: (*body.TimeSeries)[i:end],
+				Timeseries: tmp,
 			}
 
 			wg.Add(1)

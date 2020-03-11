@@ -74,17 +74,9 @@ func (r PromReader) Read(logger log.Logger) {
 
 func (r PromReader) organizer(tranChan chan chan PromReaderOutput) {
 	for ch := range tranChan {
-		all := PromReaderOutput{}
-		tss := make([]*prompb.TimeSeries, 0)
 		for body := range ch {
-			all.Start = body.Start
-			all.End = body.End
-			all.MigrationStep = body.MigrationStep
-			all.DataStep = body.DataStep
-			tss = append(tss, *(body.TimeSeries)...)
+			r.outer <- &body
 		}
-		all.TimeSeries = &tss
-		r.outer <- &all
 	}
 	close(r.outer)
 }

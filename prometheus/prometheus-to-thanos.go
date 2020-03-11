@@ -52,7 +52,8 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 	)
 	go reader.Read(logger)
 
-	for body := range dataQueue {
+	for data := range dataQueue {
+		body := data
 		splitSize := 200000
 		wg := sync.WaitGroup{}
 		for i := 0; i < len(*body.TimeSeries); i = i + splitSize {
@@ -60,23 +61,30 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 			if end > len(*body.TimeSeries) {
 				end = len(*body.TimeSeries)
 			}
-			tmp := make([]prompb.TimeSeries, 0)
-
-			for j := i; j < end; j++ {
-				tmp = append(tmp, *(*body.TimeSeries)[j])
-			}
-
-			remoteWriteBody := &prompb.WriteRequest{
-				Timeseries: tmp,
-			}
 
 			wg.Add(1)
 			go func(end, i int) {
 				defer wg.Done()
+				tmp := make([]prompb.TimeSeries, 0)
+
+				for j := i; j < end; j++ {
+					tmp = append(tmp, *(*body.TimeSeries)[j])
+				}
+
+				remoteWriteBody := &prompb.WriteRequest{
+					Timeseries: tmp,
+				}
 				err := RemoteWrite(t.ThanosAddr, remoteWriteBody)
 
 				if err != nil {
-					level.Error(logger).Log("module", "remote_write", "msg", err.Error())
+					level.Error(logger).Log(
+						"module", "remote_write",
+						"msg", err.Error(),
+						"start", time.Unix(body.Start, 0).Format("2006-01-02 15:04:05"),
+						"migrate_step", body.MigrationStep,
+						"data_step", body.DataStep,
+						"time_series_num", end-i,
+					)
 				} else {
 					level.Info(logger).Log("module", "remote_write",
 						"msg", "successful",

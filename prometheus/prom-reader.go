@@ -75,7 +75,8 @@ func (r PromReader) Read(logger log.Logger) {
 func (r PromReader) organizer(tranChan chan chan PromReaderOutput) {
 	for ch := range tranChan {
 		for body := range ch {
-			r.outer <- &body
+			tmp := body
+			r.outer <- &tmp
 		}
 	}
 	close(r.outer)

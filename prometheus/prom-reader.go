@@ -90,17 +90,18 @@ func (r PromReader) organizer(tranChan chan chan PromReaderOutput) {
 }
 
 func (r PromReader) readOneDurationData(logger log.Logger, resultChan chan PromReaderOutput, start, end int64) {
-	allSeries := make([]*prompb.TimeSeries, 0)
 	wg := sync.WaitGroup{}
 	for i, _ := range r.Address {
 		wg.Add(1)
 		go func(addr string, start, end, dStep int64) {
 			defer wg.Done()
+			allSeries := make([]*prompb.TimeSeries, 0)
 			data, err := QueryRange(addr, r.Expression, start, end, dStep)
 			if err != nil {
 				level.Error(logger).Log("msg", "query range failed.", "err", err.Error())
 				return
 			}
+
 			for i, _ := range data.Data.Result {
 				t := data.Data.Result[i].TranstoStdTimeSeries()
 				allSeries = append(allSeries, t)

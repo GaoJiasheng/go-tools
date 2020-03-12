@@ -3,7 +3,7 @@ Mail Component
 - can send mail, support cc,bcc,html
 - cannot send accessory yet
 
-使用方法：
+Usage
 ====
 - go get github.com/gaojiasheng/go-tools
 - import "github.com/gaojiasheng/go-tools/mail"

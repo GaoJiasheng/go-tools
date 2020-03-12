@@ -1,7 +1,6 @@
 package prometheus
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/prometheus/prompb"
 
 	"github.com/gaojiasheng/go-tools/utils"
@@ -65,6 +65,7 @@ func (series ReadResponseTimeSeries) TranstoStdTimeSeries() *prompb.TimeSeries {
 func Query(address, expression string) (*ReadResponse, error) {
 	target := utils.MakeURL(address, "/api/v1/query", map[string]string{})
 	param := map[string]string{"query": expression}
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	paramStr, _ := json.Marshal(param)
 
 	data := &ReadResponse{}
@@ -84,6 +85,7 @@ func QueryRange(address, expression string, start, end, step int64) (*ReadRespon
 		"end":   strconv.Itoa(int(end)),
 		"step":  strconv.Itoa(int(step)),
 	}
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	paramStr, _ := json.Marshal(param)
 
 	data := &ReadResponse{}

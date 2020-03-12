@@ -65,10 +65,11 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 			wg.Add(1)
 			go func(end, i int) {
 				defer wg.Done()
-				tmp := make([]prompb.TimeSeries, 0)
+				tmp := make([]prompb.TimeSeries, end-i)
 
 				for j := i; j < end; j++ {
 					tmp = append(tmp, *(*body.TimeSeries)[j])
+					tmp[j] = *(*body.TimeSeries)[j]
 				}
 
 				remoteWriteBody := &prompb.WriteRequest{

@@ -88,17 +88,18 @@ func (r PromReader) readOneDurationData(logger log.Logger, resultChan chan PromR
 		wg.Add(1)
 		go func(addr string, start, end, dStep int64) {
 			defer wg.Done()
-			allSeries := make([]*prompb.TimeSeries, 0)
 			data, err := QueryRange(addr, r.Expression, start, end, dStep)
 			if err != nil {
 				level.Error(logger).Log("msg", "query range failed.", "err", err.Error())
 				return
 			}
 
+			allSeries := make([]*prompb.TimeSeries, len(data.Data.Result))
 			for i, _ := range data.Data.Result {
 				t := data.Data.Result[i].TranstoStdTimeSeries()
-				allSeries = append(allSeries, t)
+				allSeries[i] = t
 			}
+
 			resultChan <- PromReaderOutput{
 				Start:         start,
 				End:           end,

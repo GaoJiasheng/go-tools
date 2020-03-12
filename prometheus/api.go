@@ -86,12 +86,14 @@ func QueryRange(address, expression string, start, end, step int64) (*ReadRespon
 		"step":  strconv.Itoa(int(step)),
 	}
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-	paramStr, _ := json.Marshal(param)
+	paramStr, err := json.Marshal(param)
+	if err != nil {
+		return nil, err
+	}
 
 	data := &ReadResponse{}
 	_, _, errs := gorequest.New().Post(target).Type("multipart").Send(string(paramStr)).EndStruct(data)
 	if errs != nil {
-		fmt.Println(errs)
 		return nil, fmt.Errorf("%v", errs)
 	}
 	return data, nil

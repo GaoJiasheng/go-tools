@@ -2,6 +2,7 @@ package prometheus
 
 import (
 	"sync"
+	"time"
 
 	"github.com/gaojiasheng/go-tools/utils"
 	"github.com/go-kit/kit/log"
@@ -99,6 +100,14 @@ func (r PromReader) readOneDurationData(logger log.Logger, resultChan chan PromR
 				t := data.Data.Result[i].TranstoStdTimeSeries()
 				allSeries[i] = t
 			}
+
+			level.Info(logger).Log(
+				"module", "prom_reader",
+				"msg", "read one time series success",
+				"addr", addr,
+				"start", time.Unix(start, 0).Format("2006-01-02 15:04:05"),
+				"series_num", len(allSeries),
+			)
 
 			resultChan <- PromReaderOutput{
 				Start:         start,

@@ -54,7 +54,7 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 
 	for data := range dataQueue {
 		body := data
-		splitSize := 200000
+		splitSize := 20000
 		wg := sync.WaitGroup{}
 		for i := 0; i < len(*body.TimeSeries); i = i + splitSize {
 			end := i + splitSize

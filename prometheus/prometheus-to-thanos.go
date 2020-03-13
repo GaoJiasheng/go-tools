@@ -97,7 +97,7 @@ func (t PromToThanosTransporter) Start(logger log.Logger) {
 					)
 				}
 			}(end, i)
-			wg.Wait()
 		}
+		wg.Wait()
 	}
 }

@@ -7,7 +7,7 @@ func TimeRangeSplit(start, end, step int64) []int64 {
 	}
 	timeSlice := make([]int64, 0)
 	ts := start - start%step
-	for ts < end {
+	for ts < end+step {
 		timeSlice = append(timeSlice, ts)
 		ts = ts + step
 	}

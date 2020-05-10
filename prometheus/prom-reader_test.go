@@ -7,7 +7,7 @@ import (
 )
 
 func TestReader(t *testing.T) {
-	resultCh := make(chan PromReaderOutput, 10)
+	resultCh := make(chan *PromReaderOutput, 10)
 	reader := NewPromReader(
 		[]string{"http://localhost:9090"},
 		time.Now().Unix()-3600*24*7,

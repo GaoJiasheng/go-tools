@@ -96,12 +96,6 @@ func (shipper *PrometheusShipper) Upload(ctx context.Context, meta *metadata.Met
 	if err := hardlinkBlock(dir, updir); err != nil {
 		return errors.Wrap(err, "hard link block")
 	}
-	/*
-		// Attach current labels and write a new meta file with Thanos extensions.
-		if lset := s.labels(); lset != nil {
-			meta.Thanos.Labels = lset.Map()
-		}
-	*/
 	meta.Thanos.Source = metadata.SourceType(components)
 
 	if err := metadata.Write(shipper.Logger, updir, meta); err != nil {

@@ -32,12 +32,12 @@ type ReadResponseTimeSeries struct {
 
 func (series ReadResponseTimeSeries) TranstoStdTimeSeries() *prompb.TimeSeries {
 	tmp := &prompb.TimeSeries{
-		Labels:  make([]prompb.Label, 0),
+		Labels:  make([]*prompb.Label, 0),
 		Samples: make([]prompb.Sample, 0),
 	}
 
 	for lk, lv := range series.Metric {
-		tmp.Labels = append(tmp.Labels, prompb.Label{
+		tmp.Labels = append(tmp.Labels, &prompb.Label{
 			Name:  lk,
 			Value: lv,
 		})

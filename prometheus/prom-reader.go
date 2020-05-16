@@ -53,7 +53,8 @@ func (r PromReader) Read(logger log.Logger) {
 	orgnizeCh := make(chan chan PromReaderOutput, 10)
 	go r.organizer(orgnizeCh)
 
-	sema := semaphore.NewSemaphore(10)
+	sema := semaphore.NewSemaphore(2)
+	wg := sync.WaitGroup{}
 	// multiple BE
 	for i, _ := range tss {
 		if i == len(tss)-1 {
@@ -66,11 +67,15 @@ func (r PromReader) Read(logger log.Logger) {
 		ch := make(chan PromReaderOutput, 20)
 		orgnizeCh <- ch
 		sema.Acquire()
+		wg.Add(1)
 		go func(ch chan PromReaderOutput, start, end int64) {
 			defer sema.Release()
+			defer wg.Done()
 			r.readOneDurationData(logger, ch, start, end)
 		}(ch, start, end)
 	}
+	wg.Wait()
+	close(orgnizeCh)
 }
 
 func (r PromReader) organizer(tranChan chan chan PromReaderOutput) {
